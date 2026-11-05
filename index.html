@@ -680,7 +680,7 @@ if (PAYPAL_CLIENT_ID) {
       style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay' },
       onClick: (data, actions) => checkOrder() ? actions.resolve() : actions.reject(),
       createOrder: (data, actions) => actions.order.create({
-        purchase_units: [{ description: 'Commande Jamilesque', amount: { currency_code: 'EUR', value: window.JAM_ORDER.total.toFixed(2) } }],
+        purchase_units: [{ description: 'Commande Jamilesque', soft_descriptor: 'JAMILESQUE', amount: { currency_code: 'EUR', value: window.JAM_ORDER.total.toFixed(2) } }],
         application_context: { brand_name: 'Jamilesque', shipping_preference: 'NO_SHIPPING' }
       }),
       onApprove: (data, actions) => actions.order.capture().then(det => {
