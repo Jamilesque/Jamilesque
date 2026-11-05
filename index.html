@@ -355,6 +355,7 @@ body.in-cart #bar{display:none!important}
     <a class="back" href="#">← Toutes les catégories</a>
     <div class="rayon-head"><h2 id="t-deso">Désodorisants 300 ml</h2><span class="rule"></span><span class="count">4,50 € l'unité</span></div>
     <p class="lot-note"><strong>Le lot de 3 au choix à 12 €</strong> au lieu de 13,50 €. La remise s'applique toute seule dans le panier.</p>
+    <p class="lot-note"><strong>Pour l'instant, remise en main propre</strong> (Valenciennes, Lille et environs) : je vous contacte après la commande pour convenir du rendez-vous. <strong>Livraison partout en France très bientôt !</strong></p>
     <div class="grid" data-cat="aero"></div>
   </section>
 
@@ -371,6 +372,7 @@ body.in-cart #bar{display:none!important}
           <label class="choice"><input type="radio" name="ship" id="ship-home" value="home"><span><strong>Livraison à domicile</strong><small>Dans votre boîte aux lettres, partout en France · <span id="kgLabel2"></span></small></span><em id="feeLabel2"></em></label>
         </div>
         <p class="promo" id="promo"></p>
+        <p class="promo" id="aeroNote" hidden></p>
       </div>
 
       <div class="step">
@@ -450,7 +452,7 @@ body.in-cart #bar{display:none!important}
     <p><strong>2. Prix.</strong> Les prix sont indiqués en euros, TVA non applicable (article 293 B du CGI). Les frais de livraison sont affichés dans le panier avant la commande : moitié prix dès 35 € d'achat, offerts dès 70 €. Les offres en lot (par exemple 3 sprays d'intérieur pour 15 €) s'appliquent automatiquement dans le panier.</p>
     <p><strong>3. Commande.</strong> Vous choisissez vos produits, renseignez vos coordonnées et votre point de livraison, vérifiez le récapitulatif, payez puis envoyez votre commande par SMS ou e-mail. La commande est définitive après réception du paiement. Une confirmation vous est envoyée.</p>
     <p><strong>4. Paiement.</strong> Le paiement se fait par PayPal (option « Biens et services »), au moment de la commande. Jamilesque n'a jamais accès à vos données bancaires.</p>
-    <p><strong>5. Livraison.</strong> Livraison en France métropolitaine, en point relais ou à domicile, selon le mode choisi dans le panier. Expédition sous 2 jours ouvrés après le paiement, puis délai du transporteur (en général 3 à 5 jours ouvrés). En cas de colis abîmé, indiquez-le au transporteur et prévenez Jamilesque sous 48 heures avec des photos. Les désodorisants en aérosol sont expédiés par un transporteur habilité pour ce type de produit, selon ses conditions (livraison à domicile possible au lieu du point relais).</p>
+    <p><strong>5. Livraison.</strong> Livraison en France métropolitaine, en point relais ou à domicile, selon le mode choisi dans le panier, par Mondial Relay, Chronopost (Chrono Shop2Shop) ou Colissimo, via la plateforme Packlink. Expédition sous 2 jours ouvrés après le paiement, puis délai du transporteur (en général 2 à 5 jours ouvrés). En cas de colis abîmé, indiquez-le au transporteur et prévenez Jamilesque sous 48 heures avec des photos. Si le colis n'est pas retiré dans le délai indiqué par le transporteur, ou s'il ne peut être livré du fait du client (adresse erronée, absence), il est retourné à Jamilesque : le client peut alors demander une nouvelle expédition à ses frais, ou, à défaut, la commande est remboursée, déduction faite des frais de livraison et des frais de retour facturés par le transporteur. Dans l'attente d'une solution de transport adaptée aux aérosols, les désodorisants ne sont pas expédiés par colis : ils sont remis en main propre (Valenciennes, Lille et environs), à une date convenue avec le client.</p>
     <p><strong>6. Droit de rétractation.</strong> Vous disposez de 14 jours à partir de la réception pour vous rétracter, sans avoir à vous justifier, en envoyant le formulaire ci-dessous ou toute déclaration claire à contact@jamilesque.fr. Vous renvoyez ensuite le produit sous 14 jours, à vos frais, complet, non utilisé et dans son état d'origine (dans sa boîte pour les eaux de parfum). Jamilesque rembourse le prix et les frais de livraison initiaux (sur la base du mode de livraison le moins cher proposé) sous 14 jours, et peut attendre la réception du produit retourné. <strong>Exception</strong> : conformément à l'article L221-28 du Code de la consommation, le droit de rétractation ne s'applique pas aux produits descellés après la livraison qui ne peuvent pas être renvoyés pour des raisons d'hygiène. Un parfum dont le film plastique a été retiré ou qui a été utilisé ne peut donc pas être repris.</p>
     <p><strong>7. Garanties légales.</strong> Tous les produits bénéficient de la garantie légale de conformité (articles L217-3 et suivants du Code de la consommation), valable 2 ans à partir de la livraison, et de la garantie contre les vices cachés (articles 1641 et suivants du Code civil). En cas de produit défectueux, cassé à la livraison ou non conforme à la commande, Jamilesque l'échange ou le rembourse, frais de retour à sa charge.</p>
     <p><strong>8. Réclamations et médiation.</strong> Pour toute question ou réclamation : contact@jamilesque.fr ou 06 07 23 25 78. Conformément aux dispositions du Code de la consommation concernant « le processus de médiation des litiges de la consommation », après nous avoir sollicités et à défaut de réponse vous satisfaisant, vous avez la possibilité de recourir gratuitement à une procédure de médiation de la consommation auprès de : <strong>CM2C</strong>, 49 rue de Ponthieu, 75008 Paris · Tél. : 01 89 47 00 14 · Site internet : <a href="https://www.cm2c.net/declarer-un-litige.php" target="_blank" rel="noopener">https://www.cm2c.net/declarer-un-litige.php</a> · Mail : litiges@cm2c.net</p>
@@ -579,17 +581,20 @@ function render(){
   const lotDiscB = Math.round(freeB * (3 * 7.00 - 18) * 100) / 100;
   const lotDisc = Math.round((lotDiscA + lotDiscI + lotDiscB) * 100) / 100;
   const sub = gross - lotDisc;
-  const kg = items.reduce((s, p) => s + p.kg * cart[p.id], 0) + PACKAGING_KG;
-  const fullFee = shipFee(kg);
+  const kg = items.filter(p => !AERO.includes(p.id)).reduce((s, p) => s + p.kg * cart[p.id], 0) + PACKAGING_KG;
+  const onlyAero = items.length > 0 && items.every(p => AERO.includes(p.id));
+  const fullFee = onlyAero ? 0 : shipFee(kg);
   const free = sub >= FREE_FROM;
   const half = !free && sub >= HALF_FROM;
   const relayFee = free ? 0 : half ? Math.round(fullFee * 50) / 100 : fullFee;
-  const fullHome = homeFeeOf(kg);
+  const fullHome = onlyAero ? 0 : homeFeeOf(kg);
   const homeFee = free ? 0 : half ? Math.round(fullHome * 50) / 100 : fullHome;
   const fee = ship === 'relay' ? relayFee : homeFee;
   const total = sub + fee;
   const n = items.reduce((s, p) => s + cart[p.id], 0);
   $('empty').hidden = items.length > 0;
+  $('aeroNote').hidden = !aeroN;
+  $('aeroNote').textContent = onlyAero ? "Désodorisants : pour l'instant, remise en main propre (Valenciennes, Lille et environs), sans frais de livraison. Je vous contacte pour convenir du rendez-vous. Livraison partout en France très bientôt !" : "Pour l'instant, les désodorisants sont remis en main propre (Valenciennes, Lille et environs) : je vous contacte pour convenir du rendez-vous. Livraison partout en France très bientôt ! Les autres articles partent par colis.";
   $('orderBox').hidden = items.length === 0;
   $('bar').hidden = items.length === 0;
   if ($('navCount')) $('navCount').textContent = n;
@@ -638,6 +643,7 @@ function render(){
     (lots ? `\nRemise lot de 3 désodorisants × ${lots} : − ${eur(lotDiscA)}` : '') +
     (lotsI ? `\nRemise lot de 3 sprays d'intérieur Collection Intense × ${lotsI} : − ${eur(lotDiscI)}` : '') +
     (freeB ? `\nRemise lot de 3 brumes × ${freeB} : − ${eur(lotDiscB)}` : '') +
+    (aeroN ? `\nDésodorisants : remise en main propre (rendez-vous à convenir)` : '') +
     `\n${liv}\nTotal payé via PayPal : ${eur(total)}\n\n${who}` + ($('f-cgv') && $('f-cgv').checked ? '\nJ\'ai lu et j\'accepte les CGV de Jamilesque.' : '');
   document.getElementById('msg').value = msg;
   document.getElementById('sms').href = 'sms:0607232578?&body=' + encodeURIComponent(msg);
