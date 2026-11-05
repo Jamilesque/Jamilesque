@@ -384,8 +384,8 @@ body.in-cart #bar{display:none!important}
           <div class="wide"><label for="f-addr">Adresse (numéro et rue)</label><input id="f-addr" autocomplete="address-line1" placeholder="Ex. 12 rue Victor Hugo" required></div>
           <div class="wide"><label for="f-addr2">Complément d'adresse (facultatif)</label><input id="f-addr2" autocomplete="address-line2" placeholder="Appartement, étage, bâtiment…"></div>
           <div class="wide"><label for="f-cp">Code postal et ville</label><input id="f-cp" autocomplete="postal-code" placeholder="Ex. 59000 Lille" required></div>
-          <div class="relay-only wide"><label for="f-relay">Point relais souhaité (nom et adresse)</label><input id="f-relay" placeholder="Ex. Tabac de la Gare, 12 rue Victor Hugo"></div>
-          <p class="relay-only wide hint">Frais calculés selon le poids du colis. Indiquez un point relais près de chez vous (bureau de tabac, commerce…) : je vous confirme le point exact avant l'envoi.</p>
+          <div class="relay-only wide"><label for="f-relay">Point Relais Mondial Relay souhaité (nom et adresse)</label><input id="f-relay" placeholder="Ex. Tabac de la Gare, 12 rue Victor Hugo"><a class="btn ghost" href="https://www.mondialrelay.fr/trouver-le-point-relais-le-plus-proche-de-chez-moi/" target="_blank" rel="noopener" style="margin-top:8px;display:inline-block">📍 Trouver un Point Relais près de chez moi</a></div>
+          <p class="relay-only wide hint">Frais calculés selon le poids du colis. Touchez le bouton ci-dessus, tapez votre code postal, choisissez un Point Relais Mondial Relay, puis recopiez son nom et son adresse dans la case. Je vous confirme le point exact avant l'envoi.</p>
         </form>
       </div>
 
@@ -612,8 +612,8 @@ function render(){
   $('lotLab').textContent = [lots ? `Lot de 3 désodorisants × ${lots}` : '', lotsI ? `Lot de 3 sprays d'intérieur Collection Intense × ${lotsI}` : '', freeB ? `Lot de 3 brumes × ${freeB}` : ''].filter(Boolean).join(' · ');
   $('lotDisc').textContent = '− ' + eur(lotDisc);
   $('subtotal').textContent = eur(sub);
-  $('shipCost').textContent = fee ? eur(fee) : 'Offerte';
-  $('shipLab').textContent = ship === 'relay' ? `Livraison (≈ ${kg.toFixed(2).replace('.', ',')} kg)` : `Livraison à domicile (≈ ${kg.toFixed(2).replace('.', ',')} kg)`;
+  $('shipCost').textContent = onlyAero ? 'Gratuite' : fee ? eur(fee) : 'Offerte';
+  $('shipLab').textContent = onlyAero ? 'Remise en main propre' : ship === 'relay' ? `Livraison (≈ ${kg.toFixed(2).replace('.', ',')} kg)` : `Livraison à domicile (≈ ${kg.toFixed(2).replace('.', ',')} kg)`;
   $('total').textContent = eur(total);
   $('barSum').textContent = `${n} article${n > 1 ? 's' : ''} · ${eur(total)}`;
 
@@ -686,8 +686,8 @@ if (PAYPAL_CLIENT_ID) {
     paypal.Buttons({
       style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay' },
       onClick: (data, actions) => checkOrder() ? actions.resolve() : actions.reject(),
-      createOrder: (data, actions) => actions.order.create({
-        purchase_units: [(() => {
+      createOrder: (data, actions) => {
+        const pu = (() => {
           const o = window.JAM_ORDER, c = x => Math.round(x * 100), e = n => (n / 100).toFixed(2);
           const it = o.items.map(p => ({ name: p.name.slice(0, 127), quantity: String(p.q), unit_amount: { currency_code: 'EUR', value: e(c(p.price)) } }));
           const itemTotal = o.items.reduce((s, p) => s + c(p.price) * p.q, 0), disc = c(o.disc), shipC = c(o.fee);
@@ -702,9 +702,18 @@ if (PAYPAL_CLIENT_ID) {
               shipping: { currency_code: 'EUR', value: e(shipC) },
               discount: { currency_code: 'EUR', value: e(disc) } } }
           };
-        })()],
-        application_context: { brand_name: 'Jamilesque', shipping_preference: 'NO_SHIPPING' }
-      }),
+        })();
+        const cpv = val('f-cp'), m = cpv.match(/\d{5}/), postal = m ? m[0] : cpv;
+        const city = cpv.replace(postal, '').replace(/[,;]/g, ' ').trim() || postal;
+        const tel = val('f-phone') ? 'Tél ' + val('f-phone') : '';
+        const line2 = (window.JAM_ORDER.ship === 'relay' ? ['Point relais : ' + val('f-relay'), val('f-addr2'), tel] : [val('f-addr2'), tel]).filter(Boolean).join(' · ');
+        const withShip = Object.assign({}, pu, { shipping: {
+          name: { full_name: val('f-name').slice(0, 300) },
+          address: { address_line_1: val('f-addr').slice(0, 300), address_line_2: line2.slice(0, 300), admin_area_2: city.slice(0, 120), postal_code: postal.slice(0, 60), country_code: 'FR' }
+        } });
+        return actions.order.create({ purchase_units: [withShip], application_context: { brand_name: 'Jamilesque', shipping_preference: 'SET_PROVIDED_ADDRESS' } })
+          .catch(() => actions.order.create({ purchase_units: [pu], application_context: { brand_name: 'Jamilesque', shipping_preference: 'NO_SHIPPING' } }));
+      },
       onApprove: (data, actions) => actions.order.capture().then(det => {
         const ref = det && det.id ? det.id : data.orderID;
         const m = window.JAM_ORDER.msg.replace('Total payé en ligne', 'Total payé en ligne (carte bancaire / PayPal)') + '\nRéférence de paiement : ' + ref;
