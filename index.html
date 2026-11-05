@@ -284,6 +284,7 @@ h2[tabindex="-1"]:focus{outline:none}
 
 body.in-cart #bar{display:none!important}
 </style>
+<script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -666,6 +667,23 @@ document.addEventListener('click', e => {
   const b = e.target;
   try { navigator.clipboard.writeText(PAYPAL_EMAIL).then(() => b.textContent = 'Adresse copiée', () => b.textContent = PAYPAL_EMAIL); } catch(err) { b.textContent = PAYPAL_EMAIL; }
 });
+const EMAILJS = { service: 'service_21ptp5j', template: 'template_fv3n1fc', key: 'x4gBtNVkefHeVuLcR' };
+function sendConfirm(ref){
+  if (!window.emailjs || !val('f-email')) return;
+  const o = window.JAM_ORDER, esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const lines = o.items.map(p => `${p.q} × ${esc(p.name)} : ${eur(p.price * p.q)}`);
+  if (o.disc) lines.push(`Remise lots : − ${eur(o.disc)}`);
+  const aero = o.items.length && o.items.every(p => /Oud for Glory|Sublime|Qimmah|I Am White|Privé Rose/.test(p.name));
+  lines.push(aero ? 'Remise en main propre : gratuite (je vous contacte pour le rendez-vous)'
+    : (o.ship === 'relay' ? 'Livraison en Point Relais : ' : 'Livraison à domicile : ') + (o.fee ? eur(o.fee) : 'offerte'));
+  const adr = o.ship === 'relay'
+    ? 'Point Relais : ' + esc(val('f-relay'))
+    : 'Adresse : ' + esc([val('f-addr'), val('f-addr2'), val('f-cp')].filter(Boolean).join(', '));
+  const details = '<b>Votre commande :</b><br>' + lines.join('<br>') + '<br><br>' + adr + '<br>Téléphone : ' + esc(val('f-phone'));
+  emailjs.send(EMAILJS.service, EMAILJS.template, {
+    to_email: val('f-email'), to_name: val('f-name'), order_ref: ref, order_details: details, total: eur(o.total)
+  }, { publicKey: EMAILJS.key }).catch(() => {});
+}
 function checkOrder(){
   const need = ['f-name','f-phone','f-email','f-addr','f-cp'].concat(ship === 'relay' ? ['f-relay'] : []);
   const missing = need.filter(id => !val(id) || (id === 'f-email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val(id))));
@@ -716,13 +734,14 @@ if (PAYPAL_CLIENT_ID) {
       },
       onApprove: (data, actions) => actions.order.capture().then(det => {
         const ref = det && det.id ? det.id : data.orderID;
+        try { sendConfirm(ref); } catch (err) {}
         const m = window.JAM_ORDER.msg.replace('Total payé en ligne', 'Total payé en ligne (carte bancaire / PayPal)') + '\nRéférence de paiement : ' + ref;
         $('msg').value = m;
         $('sms').href = 'sms:0607232578?&body=' + encodeURIComponent(m);
         $('mail').href = 'mailto:contact@jamilesque.fr?subject=' + encodeURIComponent('Commande Jamilesque') + '&body=' + encodeURIComponent(m);
         $('ppButtons').hidden = true;
         $('paid').hidden = false;
-        $('paid').textContent = 'Paiement reçu, merci ! Référence : ' + ref + '. Votre commande m\'a bien été transmise, je prépare votre colis. Une précision à ajouter ? Envoyez-moi le message ci-dessous par e-mail.';
+        $('paid').textContent = 'Paiement reçu, merci ! Référence : ' + ref + '. Votre commande m\'a bien été transmise et un e-mail de confirmation vous a été envoyé (pensez à regarder vos spams). Je prépare votre colis. Une précision à ajouter ? Envoyez-moi le message ci-dessous par e-mail.';
         $('payHint').textContent = '';
         $('msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }),
