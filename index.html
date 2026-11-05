@@ -408,14 +408,14 @@ body.in-cart #bar{display:none!important}
       </div>
 
       <div class="step">
-        <h3><span class="n">4</span>Envoyer ma commande</h3>
-        <p class="hint">Une fois le paiement fait, envoyez-moi ce message pour que je prépare votre colis.</p>
+        <h3><span class="n">4</span>Une précision ? (facultatif)</h3>
+        <p class="hint">Votre commande m'est transmise automatiquement avec le paiement. Si vous avez une précision à ajouter (code d'accès, préférence de point relais…), envoyez-moi aussi ce message par e-mail.</p>
         <label for="msg" class="sr">Votre message de commande</label>
         <textarea id="msg" readonly></textarea>
         <div class="actions">
           <button class="btn" id="copy" type="button">Copier ma commande</button>
-          <a class="btn ghost" id="sms" href="sms:0607232578">Ouvrir les SMS</a>
-          <a class="btn ghost" id="mail" href="mailto:contact@jamilesque.fr">Ouvrir l'e-mail</a>
+          <a class="btn" id="mail" href="mailto:contact@jamilesque.fr">Ouvrir l'e-mail</a>
+          <a class="btn ghost" id="sms" href="sms:0607232578" hidden>Ouvrir les SMS</a>
           <button class="btn ghost" id="clear" type="button">Vider le panier</button>
         </div>
         <p class="toast" id="toast" role="status" aria-live="polite"></p>
@@ -618,7 +618,7 @@ function render(){
   $('barSum').textContent = `${n} article${n > 1 ? 's' : ''} · ${eur(total)}`;
 
   const pay = $('pay');
-  window.JAM_ORDER = { total: total };
+  window.JAM_ORDER = { total: total, gross: gross, disc: lotDisc, fee: fee, ship: ship, items: items.map(p => ({ name: p.name + (p.sub ? ' – ' + p.sub : ''), price: p.price, q: cart[p.id] })) };
   const ppOn = PAYPAL_CLIENT_ID && !window.PP_FAILED && !$('paid').textContent;
   pay.hidden = !!ppOn; $('ppButtons').hidden = !ppOn;
   pay.textContent = `Payer ${eur(total)} avec PayPal`;
@@ -687,7 +687,22 @@ if (PAYPAL_CLIENT_ID) {
       style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay' },
       onClick: (data, actions) => checkOrder() ? actions.resolve() : actions.reject(),
       createOrder: (data, actions) => actions.order.create({
-        purchase_units: [{ description: 'Commande Jamilesque', soft_descriptor: 'JAMILESQUE', amount: { currency_code: 'EUR', value: window.JAM_ORDER.total.toFixed(2) } }],
+        purchase_units: [(() => {
+          const o = window.JAM_ORDER, c = x => Math.round(x * 100), e = n => (n / 100).toFixed(2);
+          const it = o.items.map(p => ({ name: p.name.slice(0, 127), quantity: String(p.q), unit_amount: { currency_code: 'EUR', value: e(c(p.price)) } }));
+          const itemTotal = o.items.reduce((s, p) => s + c(p.price) * p.q, 0), disc = c(o.disc), shipC = c(o.fee);
+          const liv = o.ship === 'relay' ? 'Relais : ' + (val('f-relay') || '?') : 'Domicile : ' + [val('f-addr'), val('f-addr2'), val('f-cp')].filter(Boolean).join(', ');
+          return {
+            description: liv.slice(0, 127),
+            custom_id: [val('f-name'), val('f-phone'), val('f-email')].filter(Boolean).join(' · ').slice(0, 127),
+            soft_descriptor: 'JAMILESQUE',
+            items: it,
+            amount: { currency_code: 'EUR', value: e(itemTotal - disc + shipC), breakdown: {
+              item_total: { currency_code: 'EUR', value: e(itemTotal) },
+              shipping: { currency_code: 'EUR', value: e(shipC) },
+              discount: { currency_code: 'EUR', value: e(disc) } } }
+          };
+        })()],
         application_context: { brand_name: 'Jamilesque', shipping_preference: 'NO_SHIPPING' }
       }),
       onApprove: (data, actions) => actions.order.capture().then(det => {
@@ -698,7 +713,7 @@ if (PAYPAL_CLIENT_ID) {
         $('mail').href = 'mailto:contact@jamilesque.fr?subject=' + encodeURIComponent('Commande Jamilesque') + '&body=' + encodeURIComponent(m);
         $('ppButtons').hidden = true;
         $('paid').hidden = false;
-        $('paid').textContent = 'Paiement reçu, merci ! Référence : ' + ref + '. Dernière étape : envoyez votre commande ci-dessous pour que je prépare votre colis.';
+        $('paid').textContent = 'Paiement reçu, merci ! Référence : ' + ref + '. Votre commande m\'a bien été transmise, je prépare votre colis. Une précision à ajouter ? Envoyez-moi le message ci-dessous par e-mail.';
         $('payHint').textContent = '';
         $('msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }),
