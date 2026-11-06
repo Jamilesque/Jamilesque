@@ -17,7 +17,18 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="description" content="Jamilesque : parfums, brumes et sprays d'intérieur inspirés de Dubaï. Livraison partout en France.">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-family:system-ui,sans-serif;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-family:system-ui,sans-serif;font-size:14px}img{max-width:100%}[hidden]{display:none!important}.avis{margin:48px 0 8px;text-align:center}
+.avis .rayon-head{justify-content:center}
+.avis-txt{color:var(--muted);margin:10px auto 18px;max-width:520px}
+.avis-btn{display:inline-block;margin:6px;padding:12px 26px;border-radius:999px;background:#00B67A;color:#fff;font-weight:600;text-decoration:none}
+.avis-btn.avis-alt{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.avis-note{font-size:12px;color:var(--muted);max-width:560px;margin:18px auto 0;line-height:1.5}
+.inapp{background:#FFF4D6;border:1px solid #E8C770;border-radius:14px;padding:14px 16px;margin:0 0 14px;font-size:14px;line-height:1.45}
+.inapp p{margin:0 0 10px}
+.inapp .btn{display:inline-block;margin:4px 6px 4px 0;padding:10px 18px;border-radius:999px;background:#1C1A17;color:#fff;border:0;font:inherit;font-weight:600;text-decoration:none;cursor:pointer}
+.inapp .btn.ghost{background:transparent;color:#1C1A17;border:1px solid #1C1A17}
+.inapp-ios{font-size:13px;color:#6B665E}
+</style>
 <title>Jamilesque · Parfums de Dubaï</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@1,6..96,500&family=Cinzel:wght@400;500&family=Jost:wght@300;400;500;600&display=swap">
 <style>
@@ -317,6 +328,13 @@ body.in-cart #bar{display:none!important}
   <section id="categories" aria-labelledby="t-cat">
     <div class="rayon-head"><h2 id="t-cat">Nos catégories</h2><span class="rule"></span></div>
     <div class="cats" id="cats"></div>
+    <div class="avis" id="avis">
+      <div class="rayon-head"><h2>Avis clients</h2><span class="rule"></span></div>
+      <p class="avis-txt">Vous avez commandé chez Jamilesque&nbsp;? Votre avis aide les autres clients et nous fait grandir&nbsp;💛</p>
+      <a class="avis-btn" href="https://fr.trustpilot.com/review/jamilesque.fr" target="_blank" rel="noopener">★ Voir les avis sur Trustpilot</a>
+      <a class="avis-btn avis-alt" href="https://fr.trustpilot.com/evaluate/jamilesque.fr" target="_blank" rel="noopener">Laisser un avis</a>
+      <p class="avis-note">Les avis sont publiés sur Trustpilot, plateforme indépendante. Après chaque commande, une invitation à donner votre avis vous est envoyée par e-mail environ 7 jours plus tard. Nous ne modifions ni ne supprimons les avis, et aucune contrepartie n'est offerte en échange d'un avis.</p>
+    </div>
   </section>
   <section id="parfums" class="view" hidden aria-labelledby="t-parfums">
     <a class="back" href="#">← Toutes les catégories</a>
@@ -402,6 +420,12 @@ body.in-cart #bar{display:none!important}
         <h3><span class="n">3</span>Paiement</h3>
         <label class="cgv" for="f-cgv"><input type="checkbox" id="f-cgv"><span>J'ai lu et j'accepte les <a href="#mentions">conditions générales de vente</a>, notamment l'exception au droit de rétractation pour les parfums ouverts.</span></label>
         <a class="btn pay" id="pay" href="#" target="_blank" rel="noopener"></a>
+        <div id="inapp" class="inapp" hidden>
+          <p><strong>⚠️ Vous êtes dans l'appli <span id="inappName">TikTok / Instagram</span>.</strong> Le paiement par carte peut y être bloqué. Ouvrez la page dans votre navigateur pour payer en toute sécurité (votre panier est conservé).</p>
+          <a class="btn" id="inappOpen" href="#">Ouvrir dans le navigateur</a>
+          <button type="button" class="btn ghost" id="inappCopy">Copier le lien</button>
+          <p class="inapp-ios" id="inappIos" hidden>Sur iPhone : appuyez sur <strong>⋯</strong> (en haut à droite) puis <strong>« Ouvrir dans le navigateur »</strong>, ou copiez le lien et collez-le dans Safari.</p>
+        </div>
         <p class="pay-cards" style="margin:0 0 8px;font-size:14px;text-align:center">💳 <strong>Carte bancaire</strong> (CB, Visa, Mastercard) ou <strong>PayPal</strong> · paiement 100 % sécurisé</p>
         <div id="ppButtons" class="pp-buttons" hidden></div>
         <p class="paid" id="paid" role="status" hidden></p>
@@ -534,6 +558,7 @@ try { const sv = localStorage.getItem('ship'); if (sv === 'home' || sv === 'rela
 
 let cart = {};
 try { cart = JSON.parse(localStorage.getItem('panier') || '{}') || {}; } catch(e) { cart = {}; }
+try { var _cp = new URLSearchParams(location.search).get('c'); if (_cp) { var _c = JSON.parse(decodeURIComponent(escape(atob(_cp)))); if (_c && typeof _c === 'object') { cart = _c; try { localStorage.setItem('panier', JSON.stringify(cart)); } catch(e) {} } history.replaceState(null, '', location.pathname + location.hash); } } catch(e) {}
 function save(){ try { localStorage.setItem('panier', JSON.stringify(cart)); } catch(e) {} }
 
 function card(p){
@@ -790,5 +815,33 @@ if (PAYPAL_CLIENT_ID) {
 })();
 </script>
 
+<script>
+(function(){
+  var ua = navigator.userAgent || '';
+  var m = ua.match(/musical_ly|Bytedance|TikTok/i) ? 'TikTok' : ua.match(/Instagram/i) ? 'Instagram' : ua.match(/FBAN|FBAV|FB_IAB|FBIOS/i) ? 'Facebook' : ua.match(/Snapchat/i) ? 'Snapchat' : ua.match(/WhatsApp/i) ? 'WhatsApp' : (/Android/i.test(ua) && /; wv\)/.test(ua)) ? 'que vous utilisez' : '';
+  if (!m) return;
+  var box = document.getElementById('inapp'); if (!box) return;
+  document.getElementById('inappName').textContent = m;
+  box.hidden = false;
+  var ios = /iPhone|iPad|iPod/i.test(ua);
+  function link(){
+    var c = ''; try { var p = localStorage.getItem('panier'); if (p && p !== '{}') c = '?c=' + btoa(unescape(encodeURIComponent(p))); } catch(e) {}
+    return 'https://jamilesque.fr/' + c + '#panier';
+  }
+  var open = document.getElementById('inappOpen');
+  if (ios) { open.hidden = true; document.getElementById('inappIos').hidden = false; }
+  open.addEventListener('click', function(e){
+    e.preventDefault();
+    var u = link().replace('https://','');
+    location.href = 'intent://' + u.replace('#panier','') + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(link()) + ';end';
+  });
+  document.getElementById('inappCopy').addEventListener('click', function(){
+    var u = link(), b = this;
+    function done(){ b.textContent = 'Lien copié ✓'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(done, function(){ prompt('Copiez ce lien :', u); });
+    else { prompt('Copiez ce lien :', u); }
+  });
+})();
+</script>
 </body>
 </html>
