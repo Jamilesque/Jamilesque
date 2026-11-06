@@ -558,7 +558,7 @@ try { const sv = localStorage.getItem('ship'); if (sv === 'home' || sv === 'rela
 
 let cart = {};
 try { cart = JSON.parse(localStorage.getItem('panier') || '{}') || {}; } catch(e) { cart = {}; }
-try { var _cp = new URLSearchParams(location.search).get('c'); if (_cp) { var _c = JSON.parse(decodeURIComponent(escape(atob(_cp)))); if (_c && typeof _c === 'object') { cart = _c; try { localStorage.setItem('panier', JSON.stringify(cart)); } catch(e) {} } history.replaceState(null, '', location.pathname + location.hash); } } catch(e) {}
+try { var _cp = new URLSearchParams(location.search).get('c'); if (_cp) { var _c = JSON.parse(decodeURIComponent(escape(atob(_cp)))); if (_c && typeof _c === 'object') { cart = _c; try { localStorage.setItem('panier', JSON.stringify(cart)); } catch(e) {} } history.replaceState(null, '', location.pathname + '#panier'); } } catch(e) {}
 function save(){ try { localStorage.setItem('panier', JSON.stringify(cart)); } catch(e) {} }
 
 function card(p){
