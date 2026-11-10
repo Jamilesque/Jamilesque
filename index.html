@@ -725,6 +725,18 @@ render();
 if (PAYPAL_CLIENT_ID) {
   const sdk = document.createElement('script');
   sdk.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(PAYPAL_CLIENT_ID) + '&currency=EUR&intent=capture&enable-funding=card&disable-funding=paylater&locale=fr_FR';
+  window.ppFails = 0;
+  window.ppFail = () => {
+    window.ppFails++;
+    const base = "Le paiement n'a pas abouti et aucun montant n'a été encaissé. Si votre banque affiche une opération, c'est une simple réservation temporaire qui disparaîtra d'elle-même sous quelques jours.";
+    if (window.ppFails >= 2) {
+      $('ppButtons').hidden = true;
+      $('payHint').textContent = base + " Pour éviter d'autres réservations, merci de ne pas réessayer : contactez-moi au 06 07 23 25 78 ou par e-mail, je vous propose une autre solution de paiement.";
+    } else {
+      $('payHint').textContent = base + " Vous pouvez réessayer une fois (ouvrez la page dans Chrome ou Safari si vous êtes dans une appli), ou me contacter au 06 07 23 25 78.";
+    }
+    $('payHint').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
   sdk.onload = () => {
     paypal.Buttons({
       style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'pay' },
@@ -758,6 +770,7 @@ if (PAYPAL_CLIENT_ID) {
           .catch(() => actions.order.create({ purchase_units: [pu], application_context: { brand_name: 'Jamilesque', shipping_preference: 'NO_SHIPPING' } }));
       },
       onApprove: (data, actions) => actions.order.capture().then(det => {
+        if (det && det.status && det.status !== 'COMPLETED') { ppFail(); return; }
         const ref = det && det.id ? det.id : data.orderID;
         try { sendConfirm(ref); } catch (err) {}
         const m = window.JAM_ORDER.msg.replace('Total payé en ligne', 'Total payé en ligne (carte bancaire / PayPal)') + '\nRéférence de paiement : ' + ref;
@@ -769,8 +782,11 @@ if (PAYPAL_CLIENT_ID) {
         $('paid').textContent = 'Paiement reçu, merci ! Référence : ' + ref + '. Votre commande m\'a bien été transmise et un e-mail de confirmation vous a été envoyé (pensez à regarder vos spams). Je prépare votre colis. Une précision à ajouter ? Envoyez-moi le message ci-dessous par e-mail.';
         $('payHint').textContent = '';
         $('msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }).catch(err => {
+        if (/INSTRUMENT_DECLINED/.test(String(err && err.message || err))) return actions.restart();
+        ppFail();
       }),
-      onError: () => { $('payHint').textContent = "Le paiement n'a pas abouti. Réessayez, ou contactez-moi au 06 07 23 25 78."; }
+      onError: () => ppFail()
     }).render('#ppButtons');
   };
   sdk.onerror = () => { window.PP_FAILED = true; render(); };
